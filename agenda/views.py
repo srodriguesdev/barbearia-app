@@ -1,18 +1,20 @@
 from django.shortcuts import render, redirect
-from django.contrib.auth.forms import UserCreationForm
-from django.contrib.auth import authenticate, login, logout
-from django.contrib.auth.forms import AuthenticationForm
+from django.contrib.auth.forms import UserCreationForm, AuthenticationForm
+from django.contrib.auth import login, logout
 from django.contrib.auth.decorators import login_required
 from .models import Barbeiro, Servico
+
 
 def home(request):
     # Renderiza a página inicial da aplicação
     return render(request, "agenda/home.html")
 
+
 def cadastro(request):
     # Se o formulário foi enviado, recebe os dados preenchidos pelo usuário
     if request.method == "POST":
         form = UserCreationForm(request.POST)
+
         # Valida os dados e cria o usuário caso estejam corretos
         if form.is_valid():
             form.save()
@@ -24,6 +26,7 @@ def cadastro(request):
 
     # Envia o formulário para o template cadastro.html
     return render(request, "agenda/cadastro.html", {"form": form})
+
 
 def entrar(request):
     # Se o formulário foi enviado, tenta autenticar o usuário
@@ -41,12 +44,14 @@ def entrar(request):
 
     return render(request, "agenda/login.html", {"form": form})
 
+
 def sair(request):
     # Encerra a sessão do usuário
     logout(request)
 
-    #Redireciona para a pagina inicial
+    # Redireciona para a página inicial
     return redirect("home")
+
 
 @login_required
 def agendar(request):
@@ -84,7 +89,10 @@ def agendar(request):
             # Busca o serviço no banco pelo ID recebido
             servico = Servico.objects.get(id=servico_id)
 
-            # Recupera o barbeiro escolhido anteriormente da sessão
+            # Guarda o serviço escolhido na sessão do usuário
+            request.session["servico_id"] = servico_id
+
+            # Recupera o barbeiro escolhido anteriormente
             barbeiro_id = request.session.get("barbeiro_id")
 
             # Busca novamente o barbeiro no banco
@@ -94,6 +102,9 @@ def agendar(request):
             print("Barbeiro:", barbeiro)
             print("Serviço:", servico)
 
+            # Vai para a próxima etapa do agendamento
+            return redirect("escolher_data")
+
 
     return render(
         request,
@@ -101,5 +112,34 @@ def agendar(request):
         {
             "barbeiros": barbeiros,
             "servicos": servicos,
+        }
+    )
+
+
+@login_required
+def escolher_data(request):
+
+    # Recupera as escolhas anteriores
+    barbeiro_id = request.session.get("barbeiro_id")
+    servico_id = request.session.get("servico_id")
+
+    barbeiro = Barbeiro.objects.get(id=barbeiro_id)
+    servico = Servico.objects.get(id=servico_id)
+
+
+    if request.method == "POST":
+
+        # Recebe a data escolhida pelo usuário
+        data = request.POST.get("data")
+
+        print("Data escolhida:", data)
+
+
+    return render(
+        request,
+        "agenda/data.html",
+        {
+            "barbeiro": barbeiro,
+            "servico": servico,
         }
     )

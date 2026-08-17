@@ -23,13 +23,25 @@ class Servico(models.Model):
 
 
 class Agendamento(models.Model):
+
+    STATUS_CHOICES = (
+        ("confirmado", "Confirmado"),
+        ("cancelado", "Cancelado"),
+        ("concluido", "Concluído"),
+    )
+
     cliente = models.ForeignKey(User, on_delete=models.PROTECT)
     barbeiro = models.ForeignKey(Barbeiro, on_delete=models.PROTECT)
     servico = models.ForeignKey(Servico, on_delete=models.PROTECT)
 
     data = models.DateField()
     horario = models.TimeField()
-    status = models.CharField(max_length=20, default="confirmado")
+
+    status = models.CharField(
+        max_length=20,
+        choices=STATUS_CHOICES,
+        default="confirmado"
+    )
 
     def __str__(self):
         return f"Cliente {self.cliente} - Barbeiro {self.barbeiro} - {self.data} {self.horario}"

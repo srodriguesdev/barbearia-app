@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <title>Escolher data</title>
+</head>
+<body>
+
+    <h1>Escolha a data</h1>
+
+    <p>Barbeiro: {{ barbeiro }}</p>
+
+    <p>Serviço: {{ servico }}</p>
+
+    <form method="POST">
+
+        {% csrf_token %}
+
+        <label>
+            Data:
+        </label>
+
+        <input 
+            type="date" 
+            name="data"
+        >
+
+        <button type="submit">
+            Continuar
+        </button>
+
+    </form>
+
+</body>
+</html>
