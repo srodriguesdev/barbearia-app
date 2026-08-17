@@ -12,15 +12,51 @@
 
     <h2>Escolha o barbeiro:</h2>
 
-    <ul>
-        {% for barbeiro in barbeiros %}
-            <li>
-                {{ barbeiro.nome }}
-            </li>
-        {% endfor %}
-    </ul>
+    <form method="POST">
 
-    <a href="{% url 'home' %}">Voltar para início</a>
+        {% csrf_token %}
+
+        {% for barbeiro in barbeiros %}
+
+            <input 
+                type="radio" 
+                name="barbeiro" 
+                value="{{ barbeiro.id }}"
+            >
+
+            {{ barbeiro.nome }}
+
+            <br>
+
+        {% endfor %}
+
+
+        {% if servicos %}
+
+            <h2>Escolha o serviço:</h2>
+
+            {% for servico in servicos %}
+
+                <input
+                    type="radio"
+                    name="servico"
+                    value="{{ servico.id }}"
+                >
+
+                {{ servico.nome }} - R$ {{ servico.preco }}
+
+                <br>
+
+            {% endfor %}
+
+        {% endif %}
+
+
+        <button type="submit">
+            Continuar
+        </button>
+
+    </form>
 
 </body>
 </html>
