@@ -1,4 +1,5 @@
 from django.db import models
+from django.contrib.auth.models import User
 
 # Create your models here.
 class Barbeiro(models.Model):
@@ -19,3 +20,24 @@ class Servico(models.Model):
 
     def __str__(self):
         return self.nome
+
+
+class Agendamento(models.Model):
+    cliente = models.ForeignKey(User, on_delete=models.PROTECT)
+    barbeiro = models.ForeignKey(Barbeiro, on_delete=models.PROTECT)
+    servico = models.ForeignKey(Servico, on_delete=models.PROTECT)
+
+    data = models.DateField()
+    horario = models.TimeField()
+    status = models.CharField(max_length=20, default="confirmado")
+
+    def __str__(self):
+        return f"Cliente {self.cliente} - Barbeiro {self.barbeiro} - {self.data} {self.horario}"
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=["barbeiro", "data", "horario"],
+                name="unique_agendamento_barbeiro_data_horario",
+            )
+        ]
