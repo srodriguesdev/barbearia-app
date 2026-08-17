@@ -2,6 +2,8 @@ from django.shortcuts import render, redirect
 from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.forms import AuthenticationForm
+from django.contrib.auth.decorators import login_required
+from .models import Barbeiro
 
 def home(request):
     # Renderiza a página inicial da aplicação
@@ -45,3 +47,17 @@ def sair(request):
 
     #Redireciona para a pagina inicial
     return redirect("home")
+
+@login_required
+def agendar(request):
+    # busca no bando apenas os barbeiros ativos
+
+    barbeiros = Barbeiro.objects.filter(ativo=True)
+
+    # Página de agendamento disponível apenas para usuários autenticados
+     # Envia os barbeiros encontrados para o HTML
+    return render(
+        request,
+        "agenda/agendar.html",
+        {"barbeiros": barbeiros}
+    )

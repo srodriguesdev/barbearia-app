@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <title>Agendar horário</title>
+</head>
+<body>
+
+    <h1>Agendar horário</h1>
+
+    <p>Olá, {{ user.username }}!</p>
+
+    <h2>Escolha o barbeiro:</h2>
+
+    <ul>
+        {% for barbeiro in barbeiros %}
+            <li>
+                {{ barbeiro.nome }}
+            </li>
+        {% endfor %}
+    </ul>
+
+    <a href="{% url 'home' %}">Voltar para início</a>
+
+</body>
+</html>
