@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <title>Cadastro</title>
+</head>
+<body>
+
+    <h1>Criar conta</h1>
+
+    <form method="POST">
+        {% csrf_token %}
+
+        {{ form.as_p }}
+
+        <button type="submit">Cadastrar</button>
+    </form>
+
+    <p>
+        <a href="{% url 'home' %}">Voltar para início</a>
+    </p>
+
+</body>
+</html>
