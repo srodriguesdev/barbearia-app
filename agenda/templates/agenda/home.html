@@ -9,5 +9,33 @@
     <h1>Barbearia App</h1>
     <p>Sistema de agendamento funcionando!</p>
 
+    {% if user.is_authenticated %}
+
+        <p>Olá, {{ user.username }}!</p>
+
+        <p>
+            <a href="#">Agendar horário</a>
+        </p>
+
+        <p>
+            <a href="#">Meus agendamentos</a>
+        </p>
+        
+        <p>
+            <a href="{% url 'logout' %}">Sair</a>
+        </p>
+
+    {% else %}
+
+        <p>
+            <a href="{% url 'login' %}">Entrar</a>
+        </p>
+
+        <p>
+            <a href="{% url 'cadastro' %}">Criar conta</a>
+        </p>
+
+    {% endif %}
+
 </body>
 </html>
