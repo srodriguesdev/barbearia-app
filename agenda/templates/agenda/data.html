@@ -25,6 +25,28 @@
             name="data"
         >
 
+
+        {% if horarios %}
+
+            <h2>Escolha o horário:</h2>
+
+            {% for horario in horarios %}
+
+                <input
+                    type="radio"
+                    name="horario"
+                    value="{{ horario }}"
+                >
+
+                {{ horario }}
+
+                <br>
+
+            {% endfor %}
+
+        {% endif %}
+
+
         <button type="submit">
             Continuar
         </button>
