@@ -9,4 +9,5 @@ urlpatterns = [
     path("agendar/", views.agendar, name="agendar"),
     path("data/", views.escolher_data, name="escolher_data"),
     path("servico/", views.escolher_servico, name="escolher_servico"),
+    path("horario/", views.escolher_horario, name="escolher_horario"),
 ]

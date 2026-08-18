@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <title>Escolher horário</title>
+</head>
+
+<body>
+
+    <h1>Escolha o horário</h1>
+
+    <p>Data escolhida: {{ data }}</p>
+
+
+    <form method="POST">
+
+        {% csrf_token %}
+
+
+        {% for horario in horarios %}
+
+            <input
+                type="radio"
+                name="horario"
+                value="{{ horario }}"
+            >
+
+            {{ horario }}
+
+            <br>
+
+        {% endfor %}
+
+
+        <button type="submit">
+            Continuar
+        </button>
+
+
+    </form>
+
+</body>
+</html>
