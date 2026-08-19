@@ -574,3 +574,126 @@ def sucesso_agendamento(request):
             "link_whatsapp": link_whatsapp,
         }
     )
+
+@login_required
+def meus_agendamentos(request):
+
+    # Atualiza automaticamente os agendamentos
+    # cujo horário final já passou
+    atualizar_agendamentos_concluidos()
+
+
+    # Mostra somente os agendamentos confirmados
+    # do usuário que está logado
+    agendamentos = Agendamento.objects.filter(
+        cliente=request.user,
+        status="confirmado"
+    ).order_by(
+        "data",
+        "horario"
+    )
+
+
+    return render(
+        request,
+        "agenda/meus_agendamentos.html",
+        {
+            "agendamentos": agendamentos,
+        }
+    )
+
+@login_required
+def cancelar_agendamento(request, agendamento_id):
+
+    # Busca o agendamento do usuário logado
+    agendamento = Agendamento.objects.get(
+        id=agendamento_id,
+        cliente=request.user
+    )
+
+
+    # Se o usuário confirmar o cancelamento
+    if request.method == "POST":
+
+        # Altera o status para cancelado
+        agendamento.status = "cancelado"
+
+        # Salva a alteração no banco
+        agendamento.save()
+
+        # Volta para Meus agendamentos
+        return redirect("meus_agendamentos")
+
+
+    # Se apenas abriu a página,
+    # mostra a tela de confirmação
+    return render(
+        request,
+        "agenda/confirmar_cancelamento.html",
+        {
+            "agendamento": agendamento,
+        }
+    )
+
+@login_required
+def historico_agendamentos(request):
+
+    # Atualiza automaticamente os agendamentos
+    # cujo horário final já passou
+    atualizar_agendamentos_concluidos()
+
+
+    # Busca somente os agendamentos concluídos
+    # do usuário que está logado
+    agendamentos = Agendamento.objects.filter(
+        cliente=request.user,
+        status="concluido"
+    ).order_by(
+        "-data",
+        "-horario"
+    )
+
+
+    return render(
+        request,
+        "agenda/historico_agendamentos.html",
+        {
+            "agendamentos": agendamentos,
+        }
+    )
+
+def atualizar_agendamentos_concluidos():
+
+    # Pega a data e hora atual
+    agora = timezone.localtime()
+
+
+    # Busca somente agendamentos que ainda estão confirmados
+    agendamentos = Agendamento.objects.filter(
+        status="confirmado"
+    )
+
+
+    for agendamento in agendamentos:
+
+        # Monta a data e hora de início do agendamento
+        inicio_agendamento = datetime.combine(
+            agendamento.data,
+            agendamento.horario
+        )
+
+
+        # Calcula o horário final usando a duração do serviço
+        fim_agendamento = inicio_agendamento + timedelta(
+            minutes=agendamento.servico.duracao
+        )
+
+
+        # Compara com a hora atual
+        if fim_agendamento <= agora.replace(tzinfo=None):
+
+            # Marca o agendamento como concluído
+            agendamento.status = "concluido"
+
+            # Salva a alteração no banco
+            agendamento.save()

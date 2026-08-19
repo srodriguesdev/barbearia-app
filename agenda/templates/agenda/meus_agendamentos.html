@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Meus agendamentos</title>
+</head>
+
+<body>
+
+    <h1>Meus agendamentos</h1>
+
+
+    {% if agendamentos %}
+
+        {% for agendamento in agendamentos %}
+
+            <p>
+                <strong>Barbeiro:</strong>
+                {{ agendamento.barbeiro }}
+            </p>
+
+
+            <p>
+                <strong>Serviço:</strong>
+                {{ agendamento.servico }}
+            </p>
+
+
+            <p>
+                <strong>Data:</strong>
+                {{ agendamento.data|date:"d/m/Y" }}
+            </p>
+
+
+            <p>
+                <strong>Horário:</strong>
+                {{ agendamento.horario|time:"H:i" }}
+            </p>
+
+
+            <p>
+                <strong>Status:</strong>
+                {{ agendamento.get_status_display }}
+            </p>
+
+
+            <p>
+                <strong>Valor:</strong>
+                R$ {{ agendamento.servico.preco }}
+            </p>
+
+
+            {% if agendamento.status == "confirmado" %}
+
+                <p>
+                    <a href="{% url 'cancelar_agendamento' agendamento.id %}">
+                        Cancelar agendamento
+                    </a>
+                </p>
+
+            {% endif %}
+
+
+            <hr>
+
+        {% endfor %}
+
+
+    {% else %}
+
+        <p>
+            Você ainda não possui agendamentos.
+        </p>
+
+    {% endif %}
+    <p>
+        <a href="{% url 'historico_agendamentos' %}">
+            Ver histórico
+        </a>
+    </p>
+
+
+    <a href="{% url 'home' %}">
+        Voltar para o início
+    </a>
+
+</body>
+
+</html>

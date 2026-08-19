@@ -1,4 +1,5 @@
 from django.db import models
+from django.db.models import Q
 from django.contrib.auth.models import User
 
 # Create your models here.
@@ -46,10 +47,11 @@ class Agendamento(models.Model):
     def __str__(self):
         return f"Cliente {self.cliente} - Barbeiro {self.barbeiro} - {self.data} {self.horario}"
 
-    class Meta:
-        constraints = [
-            models.UniqueConstraint(
-                fields=["barbeiro", "data", "horario"],
-                name="unique_agendamento_barbeiro_data_horario",
-            )
-        ]
+class Meta:
+    constraints = [
+        models.UniqueConstraint(
+            fields=["barbeiro", "data", "horario"],
+            condition=~Q(status="cancelado"),
+            name="unique_agendamento_ativo_barbeiro_data_horario",
+        )
+    ]

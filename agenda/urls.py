@@ -12,4 +12,7 @@ urlpatterns = [
     path("horario/", views.escolher_horario, name="escolher_horario"),
     path("confirmar/", views.confirmar_agendamento, name="confirmar_agendamento"),
     path("sucesso/",views.sucesso_agendamento,name="sucesso_agendamento"),
+    path("meus-agendamentos/",views.meus_agendamentos,name="meus_agendamentos"),
+    path("cancelar/<int:agendamento_id>/",views.cancelar_agendamento,name="cancelar_agendamento"),
+    path("historico/",views.historico_agendamentos,name="historico_agendamentos"),
 ]
