@@ -10,4 +10,6 @@ urlpatterns = [
     path("data/", views.escolher_data, name="escolher_data"),
     path("servico/", views.escolher_servico, name="escolher_servico"),
     path("horario/", views.escolher_horario, name="escolher_horario"),
+    path("confirmar/", views.confirmar_agendamento, name="confirmar_agendamento"),
+    path("sucesso/",views.sucesso_agendamento,name="sucesso_agendamento"),
 ]

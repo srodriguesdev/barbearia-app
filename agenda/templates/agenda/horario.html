@@ -9,6 +9,18 @@
 
     <h1>Escolha o horário</h1>
 
+
+    {% if messages %}
+
+        {% for message in messages %}
+
+            <p>{{ message }}</p>
+
+        {% endfor %}
+
+    {% endif %}
+
+
     <p>Data escolhida: {{ data }}</p>
 
 
@@ -36,8 +48,15 @@
             Continuar
         </button>
 
-
     </form>
+
+
+    <br>
+
+
+    <a href="{% url 'escolher_data' %}">
+        Voltar
+    </a>
 
 </body>
 </html>

@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Confirmar agendamento</title>
+</head>
+
+<body>
+
+    <h1>Confirmar agendamento</h1>
+
+    <p><strong>Cliente:</strong> {{ user.username }}</p>
+
+    <p><strong>Barbeiro:</strong> {{ barbeiro }}</p>
+
+    <p><strong>Serviço:</strong> {{ servico }}</p>
+    <p>
+    <strong>Valor: </strong>R$ {{ servico.preco }}</p>
+
+    <p><strong>Data:</strong> {{ data }}</p>
+
+    <p><strong>Horário:</strong> {{ horario }}</p>
+
+
+<form method="POST">
+    {% csrf_token %}
+
+    <button type="submit">
+        Confirmar agendamento
+    </button>
+</form>
+
+
+<a href="{% url 'escolher_horario' %}">
+    Voltar para horários
+</a>
+
+<br><br>
+
+<a href="{% url 'home' %}">
+    Voltar para o início
+</a>
+
+</body>
+
+</html>

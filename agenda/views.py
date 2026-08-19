@@ -6,7 +6,7 @@ from .models import Barbeiro, Servico, Agendamento
 from datetime import datetime, timedelta
 from django.utils import timezone
 from django.contrib import messages
-
+from urllib.parse import quote
 
 
 def home(request):
@@ -226,8 +226,21 @@ def escolher_horario(request):
     data = request.session.get("data")
 
 
-    # Gera os horários considerando a data escolhida
-    horarios = gerar_horarios(data)
+    # Recupera o barbeiro escolhido anteriormente
+    barbeiro_id = request.session.get("barbeiro_id")
+
+
+    # Recupera o serviço escolhido anteriormente
+    servico_id = request.session.get("servico_id")
+
+
+    # Gera os horários considerando:
+    # data, barbeiro e duração do serviço escolhido
+    horarios = gerar_horarios(
+        data,
+        barbeiro_id,
+        servico_id
+    )
 
 
 
@@ -244,39 +257,8 @@ def escolher_horario(request):
             request.session["horario"] = horario
 
 
-            # Recupera os dados escolhidos anteriormente
-            barbeiro_id = request.session.get("barbeiro_id")
-            servico_id = request.session.get("servico_id")
-            data = request.session.get("data")
-
-
-            # Busca os objetos no banco
-            barbeiro = Barbeiro.objects.get(id=barbeiro_id)
-
-            servico = Servico.objects.get(id=servico_id)
-
-
-            # Cria o agendamento no banco
-            Agendamento.objects.create(
-                cliente=request.user,
-                barbeiro=barbeiro,
-                servico=servico,
-                data=data,
-                horario=horario,
-            )
-
-
-            # Mostra no terminal para teste
-            print("Agendamento criado com sucesso!")
-            print("Cliente:", request.user)
-            print("Barbeiro:", barbeiro)
-            print("Serviço:", servico)
-            print("Data:", data)
-            print("Horário:", horario)
-
-
-            # Volta para a página inicial
-            return redirect("home")
+            # Vai para a tela de confirmação do agendamento
+            return redirect("confirmar_agendamento")
 
 
 
@@ -289,27 +271,97 @@ def escolher_horario(request):
         }
     )
 
+@login_required
+def confirmar_agendamento(request):
+
+    # Recupera os dados escolhidos anteriormente na sessão
+    barbeiro_id = request.session.get("barbeiro_id")
+    servico_id = request.session.get("servico_id")
+    data = request.session.get("data")
+    horario = request.session.get("horario")
 
 
-def gerar_horarios(data):
+    # Busca o barbeiro e o serviço no banco
+    barbeiro = Barbeiro.objects.get(id=barbeiro_id)
+    servico = Servico.objects.get(id=servico_id)
+
+
+    # Se o usuário clicar em "Confirmar agendamento"
+    if request.method == "POST":
+
+        # Gera novamente os horários disponíveis
+        # para garantir que o horário ainda está livre
+        horarios_disponiveis = gerar_horarios(
+            data,
+            barbeiro_id,
+            servico_id
+        )
+
+
+        # Se o horário não estiver mais disponível,
+        # volta para a escolha de horário
+        if horario not in horarios_disponiveis:
+
+            # Mostra uma mensagem para o usuário
+            messages.error(
+                request,
+                "Esse horário não está mais disponível. Escolha outro horário."
+            )
+
+            # Volta para a tela de escolha de horários
+            return redirect("escolher_horario")
+
+
+        # Cria o agendamento no banco
+        Agendamento.objects.create(
+            cliente=request.user,
+            barbeiro=barbeiro,
+            servico=servico,
+            data=data,
+            horario=horario,
+        )
+
+
+        # Mostra no terminal para teste
+        print("Agendamento criado com sucesso!")
+        print("Cliente:", request.user)
+        print("Barbeiro:", barbeiro)
+        print("Serviço:", servico)
+        print("Data:", data)
+        print("Horário:", horario)
+
+
+        
+        return redirect("sucesso_agendamento")
+
+
+    # Se for apenas abrir a página, mostra os dados para conferência
+    return render(
+        request,
+        "agenda/confirmar_agendamento.html",
+        {
+            "barbeiro": barbeiro,
+            "servico": servico,
+            "data": data,
+            "horario": horario,
+        }
+    )
+
+
+
+def gerar_horarios(data, barbeiro_id, servico_id):
 
     # Define o início dos atendimentos
     inicio = datetime.strptime("08:00", "%H:%M")
 
-
     # Define o último horário que pode iniciar atendimento
     fim = datetime.strptime("19:00", "%H:%M")
-
 
     # Lista que vai armazenar os horários disponíveis
     horarios = []
 
-
-
     # Pega a data e hora atual
     agora = timezone.localtime()
-
-
 
     # Converte a data escolhida pelo usuário
     data_escolhida = datetime.strptime(
@@ -318,31 +370,114 @@ def gerar_horarios(data):
     ).date()
 
 
+    # Data de hoje
+    hoje = agora.date()
+
+
+    # Descobre o sábado da semana atual
+    dias_ate_sabado = 5 - hoje.weekday()
+
+    if dias_ate_sabado < 0:
+        dias_ate_sabado += 7
+
+
+    fim_semana_atual = hoje + timedelta(
+        days=dias_ate_sabado
+    )
+
+
+    # Limite final:
+    # sábado da próxima semana
+    data_limite = fim_semana_atual + timedelta(
+        days=7
+    )
+
+
+    # Impede escolher datas passadas
+    if data_escolhida < hoje:
+        return []
+
+
+    # Permite somente terça até sábado
+    # segunda = 0
+    # terça = 1
+    # quarta = 2
+    # quinta = 3
+    # sexta = 4
+    # sábado = 5
+    # domingo = 6
+    if data_escolhida.weekday() not in [1, 2, 3, 4, 5]:
+        return []
+
+
+    # Impede datas depois do sábado da próxima semana
+    if data_escolhida > data_limite:
+        return []
+
+
+    # Busca o serviço que o cliente escolheu
+    servico_escolhido = Servico.objects.get(id=servico_id)
+
+
+    # Busca os agendamentos ativos daquele barbeiro e daquela data
+    agendamentos = Agendamento.objects.filter(
+        barbeiro_id=barbeiro_id,
+        data=data_escolhida
+    ).exclude(
+        status="cancelado"
+    )
+
 
     while inicio <= fim:
-
 
         # Define se o horário pode aparecer
         horario_valido = True
 
 
+        # Início do possível novo agendamento
+        novo_inicio = datetime.combine(
+            data_escolhida,
+            inicio.time()
+        )
+
+
+        # Final do possível novo agendamento,
+        # considerando a duração do serviço escolhido
+        novo_fim = novo_inicio + timedelta(
+            minutes=servico_escolhido.duracao
+        )
+
 
         # Se a data escolhida for hoje
         if data_escolhida == agora.date():
 
-
-            # Monta data e horário completo
-            horario_completo = datetime.combine(
-                data_escolhida,
-                inicio.time()
-            )
-
-
             # Remove horários que já passaram
-            if horario_completo <= agora.replace(tzinfo=None):
+            if novo_inicio <= agora.replace(tzinfo=None):
 
                 horario_valido = False
 
+
+        # Verifica conflito com agendamentos já existentes
+        for agendamento in agendamentos:
+
+            # Início do agendamento já existente
+            agendamento_inicio = datetime.combine(
+                data_escolhida,
+                agendamento.horario
+            )
+
+
+            # Final do agendamento já existente
+            agendamento_fim = agendamento_inicio + timedelta(
+                minutes=agendamento.servico.duracao
+            )
+
+
+            # Existe conflito quando os dois períodos se cruzam
+            if novo_inicio < agendamento_fim and novo_fim > agendamento_inicio:
+
+                horario_valido = False
+                break
 
 
         # Adiciona apenas horários válidos
@@ -353,10 +488,89 @@ def gerar_horarios(data):
             )
 
 
-
-        # Soma 30 minutos para próximo horário
+        # Soma 30 minutos para o próximo horário
         inicio += timedelta(minutes=30)
 
 
-
     return horarios
+
+@login_required
+def sucesso_agendamento(request):
+
+    # Recupera os dados do último agendamento pela sessão
+    barbeiro_id = request.session.get("barbeiro_id")
+    servico_id = request.session.get("servico_id")
+    data = request.session.get("data")
+    horario = request.session.get("horario")
+
+
+    # Busca barbeiro e serviço no banco
+    barbeiro = Barbeiro.objects.get(id=barbeiro_id)
+    servico = Servico.objects.get(id=servico_id)
+
+
+    # Converte a data para o formato brasileiro
+    data_formatada = datetime.strptime(
+        data,
+        "%Y-%m-%d"
+    ).strftime("%d/%m/%Y")
+
+
+    # Converte o valor para o formato brasileiro
+    valor_formatado = f"{servico.preco:.2f}".replace(".", ",")
+
+
+    # Monta a mensagem que será enviada pelo WhatsApp
+    mensagem_whatsapp = (
+        f"Olá, {barbeiro.nome}! \n\n"
+        f"Estou enviando a confirmação do meu agendamento:\n"
+        f"Cliente: {request.user.username.title()}\n"
+        f"Serviço: {servico.nome}\n"
+        f"Data: {data_formatada}\n"
+        f"Horário: {horario}\n"
+        f"Valor: R$ {valor_formatado}\n\n"
+        f"Agendamento confirmado pelo sistema."
+    )
+
+
+    # Codifica a mensagem para usar dentro do link do WhatsApp
+    mensagem_codificada = quote(mensagem_whatsapp)
+
+
+    # Remove espaços, traços e parênteses do telefone
+    telefone = barbeiro.telefone.replace(
+        " ", ""
+    ).replace(
+        "-", ""
+    ).replace(
+        "(", ""
+    ).replace(
+        ")", ""
+    )
+
+
+    # Adiciona o código do Brasil caso ainda não exista
+    if not telefone.startswith("55"):
+        telefone = "55" + telefone
+
+
+    # Monta o link do WhatsApp com a mensagem pronta
+    link_whatsapp = (
+        f"https://wa.me/{telefone}?text={mensagem_codificada}"
+    )
+
+
+    # Mostra a tela de sucesso com os dados do agendamento
+    return render(
+        request,
+        "agenda/sucesso.html",
+        {
+            "barbeiro": barbeiro,
+            "servico": servico,
+            "data": data_formatada,
+            "horario": horario,
+            "valor_formatado": valor_formatado,
+            "mensagem_whatsapp": mensagem_whatsapp,
+            "link_whatsapp": link_whatsapp,
+        }
+    )
